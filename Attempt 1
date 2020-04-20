@@ -1,0 +1,73 @@
+install.packages("FastDummies")
+library(FastDummies)
+diamond<-Sarah_Diamond_Data
+
+diamond_priced<-diamond[1:6000,]  # Priced 
+
+diamond_priced_Test<-diamond[1:4800,] # TRAIN 
+
+diamond_priced_Train<-diamond[4801:6000,] #TEST
+
+diamond_unpriced<-diamond[6001:9000,] # To be priced 
+
+
+diamond_priced_dummy <- dummy_cols(diamond_priced)
+
+
+diamond_priced_dummy$Cut<-NULL
+diamond_priced_dummy$Color<-NULL
+diamond_priced_dummy$Clarity<-NULL
+diamond_priced_dummy$Polish<-NULL
+diamond_priced_dummy$Symmetry<-NULL
+diamond_priced_dummy$Report<-NULL
+diamond_priced_dummy$ID <-NULL
+
+
+
+
+reg1<-lm(Price~.,diamond_priced_dummy)
+
+summary(reg1)
+
+reg2<-lm(Price~ `Carat Weight` + Cut_Ideal +`Cut_Signature-Ideal` +Color_D + Color_E+Color_F + Color_G+ Color_H+ Clarity_FL+ Clarity_IF+ Clarity_SI1 + Clarity_VS1+ Clarity_VS2+ Clarity_VVS1+Symmetry_EX,diamond_priced_dummy)
+summary(reg2)
+
+reg3<-lm(Price~ `Carat Weight` + Cut_Ideal +`Cut_Signature-Ideal` +Color_D + Color_E+Color_F + Color_G+ Color_H+ Clarity_FL+ Clarity_IF+ Clarity_SI1 + Clarity_VS1+ Clarity_VS2+ Clarity_VVS1,diamond_priced_dummy)
+summary(reg3)
+par(mfrow = c(2, 2))
+plot(reg3)
+
+diamond_priced_dummy <- diamond_priced_dummy[-c(3193, 1882, 4402, 2728, 4253, 189, 4738, 2726, 47, 2724, 4251,4735, 4249, 4732,2723),]
+
+diamond_priced_dummy_new <- diamond_priced_dummy %>%
+  mutate (log_price = log(Price))
+
+reg5<-lm(log_price ~ `Carat Weight` + Cut_Ideal + `Cut_Signature-Ideal` + Color_D + Color_E+Color_F + Color_G+ Color_H+ Clarity_FL+ Clarity_IF+ Clarity_SI1 + Clarity_VS1+ Clarity_VS2+ Clarity_VVS1,diamond_priced_dummy_new)
+summary(reg5)
+plot(reg5)
+ncvTest(reg5)
+
+diamond_unpriced_dummy <- dummy_cols(diamond_unpriced)
+
+
+diamond_unpriced_dummy$Color<-NULL
+diamond_unpriced_dummy$Clarity<-NULL
+diamond_unpriced_dummy$Polish<-NULL
+diamond_unpriced_dummy$Symmetry<-NULL
+diamond_unpriced_dummy$Report<-NULL
+diamond_unpriced_dummy$Cut <-NULL
+diamond_unpriced_dummy$ID <-NULL
+diamond_unpriced_dummy$Clarity_FL <-0
+
+
+pred <- predict(reg5,diamond_unpriced_dummy)
+diamond_unpriced_dummy$Price <-pred
+
+
+write.csv(diamond_unpriced_dummy,"file.csv")
+
+write.csv(diamond_unpriced_dummy, "C:\\Users\\**********\\unpriced.csv")
+
+
+summary(pred)
+                
